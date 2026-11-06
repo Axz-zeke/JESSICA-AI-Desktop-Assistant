@@ -1,0 +1,145 @@
+# ==============================================================================
+# PROJECT JESSICA - Comprehensive Git Ignore
+# Sovereign Multimodal Local AI Assistant
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. Personal Privacy & Biometrics (CRITICAL: Do NOT expose publicly)
+# ------------------------------------------------------------------------------
+# User webcam enrollment photos & FaceNet biometric embedding vectors
+senses/biometrics/creator_enrolled.jpg
+senses/biometrics/creator_face.pt
+senses/biometrics/*_enrolled.*
+senses/biometrics/*_face.pt
+senses/biometrics/*.jpg
+senses/biometrics/*.jpeg
+senses/biometrics/*.png
+
+# Desktop screen vision captures & runtime screenshots
+senses/screenshots/
+*.png.tmp
+
+# Private Creator Identity & Personal Facts
+# (Use Creator_Core_Memories.example.md for open-source setup)
+obsidian_vault/00_Identity/Creator_Core_Memories.md
+obsidian_vault/03_Daily_Logs/
+obsidian_vault/.obsidian/
+
+# Dynamically learned conversational knowledge & personal chat logs
+datasets/learned_knowledge.jsonl
+evals/*_results.json
+evals/*_metrics.json
+evals/*_report.json
+
+# ------------------------------------------------------------------------------
+# 2. Large AI Model Weights, Checkpoints & Adapters (>100MB breaks GitHub push)
+# ------------------------------------------------------------------------------
+# Model binaries & checkpoints
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.onnx
+*.ckpt
+*.h5
+*.tflite
+*.weights
+
+# Exceptions: Allow small Haar Cascades XMLs if needed
+!senses/biometrics/*.xml
+
+# Brain model checkpoints & LoRA adapters
+brain/*.pt
+brain/lora_adapter/*.safetensors
+yolov8n.pt
+
+# Voice models & runtime audio caches
+senses/voices/*.onnx
+senses/voices/*.bin
+senses/voices/cache/
+senses/voices/*.wav
+senses/voices/*.mp3
+senses/voices/*.npy
+
+# ------------------------------------------------------------------------------
+# 3. Python Virtual Environments, Bytecode & Caches
+# ------------------------------------------------------------------------------
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+site-packages/
+
+# Python compiled bytecode & runtime artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# ------------------------------------------------------------------------------
+# 4. Storage, Databases & Persistent Caches
+# ------------------------------------------------------------------------------
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+storage/
+cache/
+*.tmp
+
+# ------------------------------------------------------------------------------
+# 5. Runtime Logs & System Telemetry
+# ------------------------------------------------------------------------------
+*.log
+jessica_server.log
+jessica_server_err.log
+server.log
+server_err.log
+server_out.log
+
+# ------------------------------------------------------------------------------
+# 6. Rust & Tauri Desktop Shell Build Artifacts
+# ------------------------------------------------------------------------------
+target/
+desktop_app/src-tauri/target/
+desktop_app/src-tauri/gen/
+*.exe
+*.msi
+*.dll
+*.pdb
+
+# ------------------------------------------------------------------------------
+# 7. Environment Variables, Secrets & API Keys
+# ------------------------------------------------------------------------------
+.env
+.env.*
+*.env
+*.key
+*.pem
+*.crt
+credentials.json
+token.json
+tokens.json
+secrets.json
+
+# ------------------------------------------------------------------------------
+# 8. Operating System & IDE Workspace Files
+# ------------------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+.vscode/*
+!.vscode/settings.json
+.idea/
+*.sublime-project
+*.sublime-workspace
+

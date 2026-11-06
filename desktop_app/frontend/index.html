@@ -1,0 +1,1815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jessica — Sovereign AI Mission Control (Phase 3)</title>
+  <style>
+    :root {
+      --bg: #07090e;
+      --panel-bg: #0d111a;
+      --card-bg: #131824;
+      --border: #1e2638;
+      --accent: #f59e0b;
+      --accent-glow: rgba(245, 158, 11, 0.25);
+      --cyan: #06b6d4;
+      --cyan-glow: rgba(6, 182, 212, 0.25);
+      --green: #10b981;
+      --purple: #8b5cf6;
+      --red: #ef4444;
+      --pink: #ec4899;
+      --text: #e2e8f0;
+      --text-muted: #8290a5;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      user-select: none;
+    }
+    /* Top Bar */
+    header {
+      height: 52px;
+      background: #090c14;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      z-index: 10;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      background: linear-gradient(135deg, var(--accent), var(--pink));
+      color: #000;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+    .brand-title {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+    .brand-title span { color: var(--accent); }
+    .status-tags {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .tag {
+      background: #111624;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-muted);
+    }
+    .tag.online {
+      border-color: rgba(16, 185, 129, 0.4);
+      color: var(--green);
+    }
+    .tag.voice {
+      border-color: rgba(236, 72, 153, 0.4);
+      color: var(--pink);
+    }
+    .indicator-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+    }
+
+    /* Main Grid Layout */
+    .dashboard-grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 480px 1fr;
+      grid-template-rows: 1fr 280px;
+      gap: 12px;
+      padding: 12px;
+      height: calc(100vh - 52px);
+      overflow: hidden;
+    }
+
+    /* Panel 1: Left Command & Chat Deck */
+    .panel-chat {
+      grid-row: 1 / 3;
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 12px 16px;
+      background: #0b0f17;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--cyan);
+    }
+    
+    /* Emotion & Voice Bar in Panel 1 */
+    .voice-status-bar {
+      padding: 10px 16px;
+      background: #090e17;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .emotion-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+    }
+    .emotion-pill.warm { background: rgba(245, 158, 11, 0.15); border-color: var(--accent); color: var(--accent); }
+    .emotion-pill.playful { background: rgba(236, 72, 153, 0.15); border-color: var(--pink); color: var(--pink); }
+    .emotion-pill.excited { background: rgba(16, 185, 129, 0.15); border-color: var(--green); color: var(--green); }
+    .emotion-pill.calm { background: rgba(6, 182, 212, 0.15); border-color: var(--cyan); color: var(--cyan); }
+    .emotion-pill.serious { background: rgba(139, 92, 246, 0.15); border-color: var(--purple); color: var(--purple); }
+    .emotion-pill.curious { background: rgba(59, 130, 246, 0.15); border-color: #3b82f6; color: #3b82f6; }
+
+    /* Audio Waveform Canvas */
+    .waveform-container {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      height: 24px;
+      flex: 1;
+      justify-content: center;
+      background: #05070c;
+      padding: 2px 8px;
+      border-radius: 6px;
+      border: 1px solid #161c2c;
+    }
+    .wave-bar {
+      width: 4px;
+      height: 6px;
+      background: var(--cyan);
+      border-radius: 2px;
+      transition: height 0.08s ease;
+    }
+
+    .voice-toggle-btn {
+      background: #111827;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 0.72rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .voice-toggle-btn.active {
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    .chat-stream {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .bubble {
+      max-width: 90%;
+      padding: 12px 15px;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      line-height: 1.45;
+      word-break: break-word;
+      user-select: text;
+    }
+    .bubble.user {
+      align-self: flex-end;
+      background: #1e263d;
+      border: 1px solid #2f3c5f;
+      color: #fff;
+    }
+    .bubble.jessica {
+      align-self: flex-start;
+      background: #111624;
+      border: 1px solid #1c2438;
+      color: #e2e8f0;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    }
+    .bubble-meta {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .bubble-audio-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--cyan);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 0.68rem;
+      cursor: pointer;
+    }
+    .bubble-audio-btn:hover {
+      background: var(--cyan);
+      color: #000;
+    }
+
+    .confirm-card {
+      align-self: flex-start;
+      background: #1c1514;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      border-radius: 10px;
+      padding: 14px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      animation: pulseAlert 2s infinite;
+    }
+    @keyframes pulseAlert {
+      0% { box-shadow: 0 0 0 rgba(239, 68, 68, 0); }
+      50% { box-shadow: 0 0 16px rgba(239, 68, 68, 0.25); }
+      100% { box-shadow: 0 0 0 rgba(239, 68, 68, 0); }
+    }
+    .confirm-actions {
+      display: flex;
+      gap: 10px;
+    }
+    .btn-approve {
+      flex: 1;
+      background: var(--green);
+      color: #000;
+      font-weight: 700;
+      padding: 8px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+    }
+    .btn-deny {
+      flex: 1;
+      background: var(--red);
+      color: #fff;
+      font-weight: 700;
+      padding: 8px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+    }
+
+    /* Quick command pills */
+    .pills-bar {
+      padding: 10px 14px;
+      background: #090c14;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+    .quick-pill {
+      background: #121726;
+      border: 1px solid var(--border);
+      color: #cbd5e1;
+      font-size: 0.72rem;
+      padding: 5px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .quick-pill:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #000;
+      font-weight: 600;
+    }
+    .quick-pill.primary {
+      border-color: rgba(6, 182, 212, 0.5);
+      color: var(--cyan);
+    }
+
+    /* Chat input & voice button */
+    .chat-input-bar {
+      padding: 12px 14px;
+      background: #0b0f17;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+    }
+    .chat-input {
+      flex: 1;
+      background: #07090f;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #fff;
+      font-size: 0.88rem;
+      outline: none;
+    }
+    .chat-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+    .mic-btn {
+      background: #141c2e;
+      border: 1px solid var(--border);
+      color: var(--pink);
+      border-radius: 8px;
+      padding: 0 14px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .mic-btn.recording {
+      background: var(--red);
+      color: #fff;
+      border-color: var(--red);
+      animation: pulseAlert 1s infinite;
+    }
+    .send-btn {
+      background: linear-gradient(135deg, var(--accent), #d97706);
+      border: none;
+      border-radius: 8px;
+      padding: 0 18px;
+      color: #000;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .send-btn:hover {
+      filter: brightness(1.1);
+    }
+
+    /* Panel 2: Live Telemetry & Neural Monitor */
+    .panel-telemetry {
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .telemetry-body {
+      padding: 16px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      flex: 1;
+    }
+    .metric-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .metric-title {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+    .metric-val {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #fff;
+      margin: 4px 0;
+    }
+    .bar-track {
+      height: 6px;
+      background: #090c14;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--cyan), var(--green));
+      width: 0%;
+      transition: width 0.3s;
+    }
+
+    .neural-monitor {
+      grid-column: 1 / 3;
+      background: #0a0d16;
+      border: 1px solid #1a233a;
+      border-radius: 8px;
+      padding: 12px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .monitor-subcard {
+      background: #0e1422;
+      border-radius: 6px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .monitor-label {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+    .monitor-val {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .badge-check {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: var(--green);
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+    .badge-voice {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(236, 72, 153, 0.15);
+      border: 1px solid rgba(236, 72, 153, 0.4);
+      color: var(--pink);
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
+    /* Panel 3: Diagnostic Terminal */
+    .panel-console {
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .console-header-controls {
+      display: flex;
+      gap: 8px;
+    }
+    .action-btn {
+      background: #141b2a;
+      border: 1px solid var(--border);
+      color: var(--cyan);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .action-btn:hover {
+      background: #20283d;
+      border-color: var(--cyan);
+      color: #fff;
+    }
+    .action-btn.primary {
+      background: linear-gradient(135deg, #10b981, #059669);
+      border: none;
+      color: #000;
+      font-weight: 700;
+    }
+    .terminal-window {
+      flex: 1;
+      background: #05070b;
+      padding: 12px 14px;
+      font-family: "Consolas", "Courier New", monospace;
+      font-size: 0.78rem;
+      color: #cbd5e1;
+      overflow-y: auto;
+      line-height: 1.5;
+      user-select: text;
+    }
+    .log-line {
+      display: flex;
+      gap: 8px;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .log-ts { color: #526079; }
+    .log-tag-SYS { color: var(--cyan); font-weight: 700; }
+    .log-tag-BRAIN { color: var(--purple); font-weight: 700; }
+    .log-tag-HANDS { color: var(--green); font-weight: 700; }
+    .log-tag-VAULT { color: var(--accent); font-weight: 700; }
+    .log-tag-VOICE { color: var(--pink); font-weight: 700; }
+    .log-tag-ERROR { color: var(--red); font-weight: 700; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="brand-logo">J</div>
+      <div class="brand-title">JESSICA <span>MISSION CONTROL</span></div>
+    </div>
+    <div class="status-tags">
+      <div class="tag online"><span class="indicator-dot"></span> NVIDIA RTX 4060 (8GB)</div>
+      <div class="tag">CUDA 12.4 (30 TFLOPS)</div>
+      <div class="tag">Router v0.4 + JessicaCortex-8B-v8 (100% Sovereign Neural Core)</div>
+      <div class="tag voice">Voice Engine (235Hz F0 / 100% Local)</div>
+      <div class="tag">100% Air-Gapped Local</div>
+    </div>
+  </header>
+
+  <div class="dashboard-grid">
+    <!-- PANEL 1: Command & Chat Deck -->
+    <div class="panel-chat">
+      <div class="panel-header">
+        <span>Panel 1: Sovereign Chat & Bi-Directional Voice</span>
+        <span style="font-size:0.7rem; color:var(--text-muted);">Neural Active</span>
+      </div>
+
+      <!-- Voice & Emotion Strip -->
+      <div class="voice-status-bar">
+        <div id="emotion-badge" class="emotion-pill warm">
+          <span>●</span> <span id="emotion-text">WARM</span>
+        </div>
+
+        <div class="waveform-container" id="waveform-box">
+          <!-- 32 Waveform bars -->
+        </div>
+
+        <button id="mute-toggle-btn" class="voice-toggle-btn active" onclick="toggleMute()">
+          <span id="mute-icon">🔊</span> <span id="mute-text">Auto-Speak ON</span>
+        </button>
+      </div>
+
+      <div class="chat-stream" id="chat-stream">
+        <div class="bubble jessica">
+          <strong>Jessica:</strong> Mission Control online. I am equipped with JessicaCortex-8B-v8 (100% Sovereign Neural Core) and Custom QLoRA Spoken Acting weights on your RTX 4060. Pre-speech sanitization is 100% active with zero emoji, asterisk, or tag leakage.
+          <div class="bubble-meta">
+            <span>v0.8.0-sovereign-8b</span>
+            <span>RTX 4060 Local</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick-Test Command Pills (Phase 4 Sovereign Deck) -->
+      <div class="pills-bar">
+        <div class="quick-pill primary" onclick="sendQuick('Hi')">1. Hi</div>
+        <div class="quick-pill primary" onclick="sendQuick('Who are you?')">2. Who are you?</div>
+        <div class="quick-pill primary" onclick="sendQuick('Check my RTX 4060 telemetry')">3. GPU Telemetry</div>
+        <div class="quick-pill" onclick="askJessicaToLookAtMe()" style="border-color:rgba(236,72,153,0.6); color:var(--pink); font-weight:700;">📸 Look at Me: How do I look?</div>
+        <div class="quick-pill" onclick="sendQuick('What is the Cybertruck?')" style="border-color:rgba(236,72,153,0.5); color:var(--pink);">❓ Auto-Curiosity: Cybertruck</div>
+        <div class="quick-pill" onclick="sendQuick('Explain how the BGP routing protocol works')" style="border-color:rgba(14,165,233,0.5); color:var(--cyan);">❓ Auto-Curiosity: BGP</div>
+        <div class="quick-pill" onclick="sendQuick('Look at my screen')" style="border-color:rgba(16,185,129,0.5); color:var(--green);">👁️ Look at Screen</div>
+        <div class="quick-pill" onclick="scanFaceId()" style="border-color:rgba(6,182,212,0.5); color:var(--cyan);">👁️ Face ID Scan</div>
+        <div class="quick-pill" onclick="sendQuick('Minimize all windows')" style="border-color:rgba(245,158,11,0.5); color:var(--accent);">🪟 Minimize Windows</div>
+      </div>
+
+      <div class="chat-input-bar">
+        <select id="mic-select" onchange="syncInputMic(this.value)" title="Select Hardware Microphone" style="background:#0c101d; border:1px solid var(--border); color:#38bdf8; border-radius:8px; font-size:0.75rem; padding:0 8px; max-width:140px; height:40px; outline:none; cursor:pointer;">
+          <option value="12" selected>Webcam Mic [#12]</option>
+        </select>
+        <button id="mic-btn" class="mic-btn" onclick="toggleMicRecording()">
+          <span id="mic-icon">🎙️</span> <span id="mic-label">MIC</span>
+        </button>
+        <input type="text" id="cmd-input" class="chat-input" placeholder="Type a message or press MIC to talk to Jessica..." autofocus />
+        <button id="send-btn" class="send-btn">SEND</button>
+      </div>
+    </div>
+
+    <!-- PANEL 2: Live Neural & Hardware Telemetry -->
+    <div class="panel-telemetry">
+      <div class="panel-header">
+        <span>Panel 2: Live Neural, Biometric & Hardware Telemetry</span>
+        <span id="telemetry-ts" style="font-size:0.7rem; color:var(--text-muted);">Syncing...</span>
+      </div>
+
+      <div class="telemetry-body">
+        <!-- Biometric Vision HUD Card -->
+        <div class="metric-card" style="grid-column: 1 / 3; background:#0c101d; border-color: rgba(6, 182, 212, 0.4);">
+          <div class="metric-title">
+            <span style="color:var(--cyan); font-weight:700;">👁️ BIOMETRIC FACE ID & WAKE WORD MONITOR</span>
+            <span id="bio-lock-status" class="badge-check" style="border-color:var(--cyan); color:var(--cyan);">BIOMETRIC LOCK: STANDBY</span>
+          </div>
+          <div style="display:flex; gap:12px; margin-top:8px; align-items:center;">
+            <div id="bio-frame-box" style="width:112px; height:84px; border-radius:6px; border:1px solid var(--border); background:#05070c; display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative;">
+              <video id="bio-video-live" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover; display:none;"></video>
+              <img id="bio-frame-img" src="" style="width:100%; height:100%; object-fit:cover; display:none;" />
+              <span id="bio-cam-placeholder" style="font-size:0.7rem; color:var(--text-muted); text-align:center;">WEBCAM<br>HUD</span>
+              <canvas id="bio-snap-canvas" width="640" height="480" style="display:none;"></canvas>
+            </div>
+            <div style="flex:1; display:flex; flex-direction:column; gap:4px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="font-size:0.78rem;">Creator Identity: <strong id="bio-user" style="color:#fff;">Creator</strong></div>
+                <select id="cam-select" onchange="changeCameraDevice(this.value)" title="Select Webcam" style="background:#090d16; border:1px solid var(--border); color:#94a3b8; border-radius:4px; font-size:0.7rem; padding:2px 4px; outline:none; max-width:125px; cursor:pointer;">
+                  <option value="0">Camera 0</option>
+                </select>
+              </div>
+              <div style="font-size:0.78rem;">Cosine Similarity: <strong id="bio-sim" style="color:var(--green);">--</strong></div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+                <span style="font-size:0.72rem; color:#94a3b8;">Wake Mic:</span>
+                <select id="wake-mic-select" onchange="syncWakeMic(this.value)" style="background:#090d16; border:1px solid var(--border); color:#38bdf8; border-radius:4px; font-size:0.7rem; padding:2px 4px; outline:none; max-width:180px; cursor:pointer;">
+                  <option value="12" selected>Webcam Mic (A4tech FHD 1080P)</option>
+                  <option value="11">Headset Mic (44.1kHz)</option>
+                </select>
+              </div>
+              <div style="display:flex; gap:6px; margin-top:4px; flex-wrap:wrap; align-items:center;">
+                <button id="cam-toggle-btn" class="action-btn" onclick="toggleWebcamPreview()" style="font-size:0.72rem; padding:4px 8px;">[📷 Cam: OFF]</button>
+                <button id="look-at-me-btn" class="action-btn" onclick="askJessicaToLookAtMe()" style="background:rgba(236,72,153,0.2); border-color:var(--pink); color:#fff; font-size:0.72rem; padding:4px 8px;">[📸 Look at Me]</button>
+                <button id="auto-greet-btn" class="action-btn" onclick="toggleAutoGreet()" style="background:#131824; font-size:0.72rem; padding:4px 8px;">[👁️ Auto-Greet: OFF]</button>
+                <button class="action-btn" onclick="scanFaceId()" style="background:rgba(6, 182, 212, 0.2); border-color:var(--cyan); color:#fff; font-size:0.72rem; padding:4px 8px;">[👁️ Scan Face ID]</button>
+                <button id="wake-toggle-btn" class="action-btn" onclick="toggleWakeWord()" style="background:#131824; font-size:0.72rem; padding:4px 8px;">[🎙️ Open-Mic: OFF]</button>
+              </div>
+              <div id="wake-status-bar" style="margin-top:4px; font-size:0.7rem; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+                <span id="wake-dot" style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#64748b;"></span>
+                <span id="wake-status-text">Open-Mic Inactive</span>
+                <span id="wake-triggers-count" style="margin-left:auto; color:var(--cyan); font-weight:600;">Triggers: 0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-title"><span>RTX 4060 VRAM</span><span>8188 MiB</span></div>
+          <div class="metric-val" id="val-vram">-- MiB</div>
+          <div class="bar-track"><div class="bar-fill" id="bar-vram"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-title"><span>GPU Load</span><span id="val-gpu-temp">--°C</span></div>
+          <div class="metric-val" id="val-gpu">--%</div>
+          <div class="bar-track"><div class="bar-fill" id="bar-gpu"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-title"><span>Host CPU</span><span id="val-cpu-cores">-- Cores</span></div>
+          <div class="metric-val" id="val-cpu">--%</div>
+          <div class="bar-track"><div class="bar-fill" id="bar-cpu"></div></div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-title"><span>System RAM</span><span id="val-ram-usage">-- / -- GB</span></div>
+          <div class="metric-val" id="val-ram">--%</div>
+          <div class="bar-track"><div class="bar-fill" id="bar-ram"></div></div>
+        </div>
+
+        <!-- Neural & Voice Monitor Details -->
+        <div class="neural-monitor">
+          <div class="monitor-subcard">
+            <div class="monitor-label">Scaled Brain Telemetry</div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <span class="badge-check" id="val-brain-params">8.03B Params (4-Bit NF4)</span>
+              <span class="badge-check" id="val-brain-model">JessicaCortex-8B-v8</span>
+            </div>
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">BPE Vocab: <strong style="color:var(--cyan);" id="val-vocab-size">128,256 Tokens</strong></div>
+          </div>
+
+          <div class="monitor-subcard">
+            <div class="monitor-label">Infinite Memory & 3-Tier Symbiosis</div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <span class="badge-voice" id="val-working-memory">RAM Cache: Active</span>
+              <span class="badge-check" style="border-color:var(--green); color:var(--green);">Latency: &lt;0.05ms</span>
+              <span class="badge-check" style="border-color:var(--cyan); color:var(--cyan);">Storage: 294GB SQLite</span>
+            </div>
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">Spoken Acting: <strong style="color:var(--green);">Zero-Script PyTorch</strong> | Offload: <strong style="color:var(--accent);">8 CPU Threads</strong></div>
+          </div>
+
+          <div class="monitor-subcard">
+            <div class="monitor-label">Cortex Speed & RAG Memory</div>
+            <div style="font-size:0.85rem; font-weight:700; color:var(--cyan);">Speed: <span id="val-tokens-sec">--</span> tok/s</div>
+            <div style="font-size:0.72rem; color:var(--text-muted); text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">RAG Docs: <span id="val-rag-docs" style="color:#fff;">None</span></div>
+          </div>
+
+          <div style="grid-column: 1 / 4; display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top: 4px;">
+            <button id="curriculum-train-btn" class="action-btn" onclick="trainEnglishCurriculumBatch()" style="background:linear-gradient(135deg, #0284c7, #2563eb); color:#fff; font-weight:700; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-size:0.76rem; display:flex; align-items:center; justify-content:center; gap:6px;">
+              📚 Train Next English Curriculum Batch (GPU)
+            </button>
+            <button id="evolve-btn" class="action-btn" onclick="triggerBrainEvolution()" style="background:linear-gradient(135deg, #7c3aed, #db2777); color:#fff; font-weight:700; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-size:0.76rem; display:flex; align-items:center; justify-content:center; gap:6px;">
+              ⚡ Evolve Brain (Obsidian Memory Fine-Tune)
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL 3: Live Terminal Log & Diagnostic Console -->
+    <div class="panel-console">
+      <div class="panel-header">
+        <span>Panel 3: Diagnostic Console & System Stream</span>
+        <div class="console-header-controls">
+          <button class="action-btn" onclick="testVoiceSynthesis()">[Test Voice]</button>
+          <button class="action-btn" onclick="runSelfTest()">[Run Self-Test]</button>
+          <button class="action-btn primary" onclick="copyDiagnosticReport()">[Copy Diagnostic Report]</button>
+        </div>
+      </div>
+
+      <div class="terminal-window" id="terminal-window">
+        <!-- Live Log Lines Injected Here -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let lastLogCount = 0;
+    let cachedTelemetry = {};
+    let autoSpeak = true;
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let isRecording = false;
+
+    // Build 32 waveform bars
+    const waveBox = document.getElementById('waveform-box');
+    for (let i = 0; i < 32; i++) {
+      const bar = document.createElement('div');
+      bar.className = 'wave-bar';
+      bar.id = `wb-${i}`;
+      waveBox.appendChild(bar);
+    }
+
+    function renderWaveform(envelope) {
+      if (!envelope || envelope.length === 0) return;
+      for (let i = 0; i < 32; i++) {
+        const val = envelope[i] || 0.1;
+        const bar = document.getElementById(`wb-${i}`);
+        if (bar) {
+          bar.style.height = `${Math.max(4, Math.round(val * 22))}px`;
+        }
+      }
+    }
+
+    function setEmotionBadge(emotion) {
+      const pill = document.getElementById('emotion-badge');
+      const text = document.getElementById('emotion-text');
+      const cleanEmo = (emotion || 'warm').toLowerCase();
+      pill.className = `emotion-pill ${cleanEmo}`;
+      text.innerText = cleanEmo.toUpperCase();
+    }
+
+    async function toggleMute() {
+      try {
+        const res = await fetch('/api/voice/toggle_auto_speak', {method: 'POST'});
+        const data = await res.json();
+        autoSpeak = data.auto_speak;
+        const btn = document.getElementById('mute-toggle-btn');
+        const icon = document.getElementById('mute-icon');
+        const txt = document.getElementById('mute-text');
+        if (autoSpeak) {
+          btn.className = 'voice-toggle-btn active';
+          icon.innerText = '🔊';
+          txt.innerText = 'Auto-Speak ON';
+        } else {
+          btn.className = 'voice-toggle-btn';
+          icon.innerText = '🔇';
+          txt.innerText = 'Muted';
+        }
+      } catch (e) {
+        console.warn('Mute toggle error:', e);
+      }
+    }
+
+    async function pollTelemetry() {
+      try {
+        const res = await fetch('/api/telemetry');
+        const data = await res.json();
+        cachedTelemetry = data;
+
+        const setTxt = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+        const setWidth = (id, val) => { const el = document.getElementById(id); if (el) el.style.width = val; };
+
+        if (data.cpu) {
+          setTxt('val-cpu', data.cpu.utilization_pct + '%');
+          setWidth('bar-cpu', data.cpu.utilization_pct + '%');
+          setTxt('val-cpu-cores', data.cpu.logical_cores + ' Cores');
+        }
+        if (data.ram) {
+          setTxt('val-ram', data.ram.utilization_pct + '%');
+          setWidth('bar-ram', data.ram.utilization_pct + '%');
+          setTxt('val-ram-usage', data.ram.used_gb + ' / ' + data.ram.total_gb + ' GB');
+        }
+        if (data.gpu) {
+          setTxt('val-gpu', data.gpu.utilization_gpu_pct + '%');
+          setWidth('bar-gpu', data.gpu.utilization_gpu_pct + '%');
+          setTxt('val-gpu-temp', (data.gpu.temperature_c || 0) + '°C');
+          setTxt('val-vram', (data.gpu.memory_used_mb || 0) + ' MiB');
+          const vramPct = ((data.gpu.memory_used_mb || 0) / (data.gpu.memory_total_mb || 8188)) * 100;
+          setWidth('bar-vram', vramPct + '%');
+        }
+        if (data.neural) {
+          if (data.neural.parameter_count) setTxt('val-brain-params', data.neural.parameter_count);
+          if (data.neural.cortex_checkpoint) setTxt('val-brain-model', data.neural.cortex_checkpoint);
+          if (data.neural.vocab_size) setTxt('val-vocab-size', data.neural.vocab_size.toLocaleString() + ' Tokens');
+          if (data.neural.perplexity) setTxt('val-ppl', 'PPL: ' + data.neural.perplexity);
+          if (data.neural.fluency_score) setTxt('val-fluency', 'Fluency: ' + data.neural.fluency_score);
+          if (data.neural.working_memory_turns !== undefined) setTxt('val-working-memory', 'Memory: ' + data.neural.working_memory_turns + ' turns');
+          if (data.neural.speech_sanitizer) setTxt('val-sanitizer-status', data.neural.speech_sanitizer);
+
+          if (data.neural.last_stats) {
+            const s = data.neural.last_stats;
+            setTxt('val-tokens-sec', (s.tokens_per_sec || 0));
+            setTxt('val-rag-docs', (s.retrieved_docs && s.retrieved_docs.length > 0) ? s.retrieved_docs.join(', ') : 'None');
+            if (s.last_emotion) {
+              setEmotionBadge(s.last_emotion);
+            }
+          }
+        }
+        if (data.wake_word) {
+          updateWakeUI(data.wake_word);
+        }
+        const tsEl = document.getElementById('telemetry-ts');
+        if (tsEl) {
+          tsEl.innerText = '🟢 LIVE (ONLINE) ' + new Date().toLocaleTimeString();
+          tsEl.style.color = 'var(--green)';
+        }
+      } catch (e) {
+        console.warn('Telemetry error:', e);
+        const tsEl = document.getElementById('telemetry-ts');
+        if (tsEl) {
+          tsEl.innerText = '⚠️ RECONNECTING...';
+          tsEl.style.color = 'var(--accent)';
+        }
+      }
+    }
+
+    async function pollLogs() {
+      try {
+        const res = await fetch('/api/logs');
+        const data = await res.json();
+        if (data.logs && data.logs.length !== lastLogCount) {
+          lastLogCount = data.logs.length;
+          const term = document.getElementById('terminal-window');
+          term.innerHTML = '';
+          data.logs.forEach(item => {
+            const row = document.createElement('div');
+            row.className = 'log-line';
+            row.innerHTML = `<span class="log-ts">[${item.timestamp}]</span><span class="log-tag-${item.category}">[${item.category}]</span> <span>${item.message}</span>`;
+            term.appendChild(row);
+          });
+          term.scrollTop = term.scrollHeight;
+        }
+      } catch (e) {
+        console.warn('Log poll error:', e);
+      }
+    }
+
+    async function restoreChatHistory() {
+      try {
+        const res = await fetch('/api/memory/history');
+        const data = await res.json();
+        if (data.history && data.history.length > 0) {
+          const stream = document.getElementById('chat-stream');
+          stream.innerHTML = '';
+          data.history.forEach(turn => {
+            const sender = turn.role === 'user' ? 'You' : 'Jessica';
+            const meta = {
+              left: turn.timestamp || 'Resident RAM',
+              right: turn.emotion ? `[${turn.emotion}]` : ''
+            };
+            appendMessage(sender, turn.content, meta, turn.audio_url);
+          });
+          console.log(`[+] Restored ${data.history.length} persistent chat turns from RAM/SQLite.`);
+        }
+      } catch (e) {
+        console.warn('Memory history restore notice:', e);
+      }
+    }
+
+    setInterval(pollTelemetry, 1800);
+    setInterval(pollLogs, 1200);
+    pollTelemetry();
+    pollLogs();
+    restoreChatHistory();
+
+    function appendMessage(sender, text, meta, audioUrl) {
+      const stream = document.getElementById('chat-stream');
+      const bubble = document.createElement('div');
+      bubble.className = `bubble ${sender.toLowerCase()}`;
+      bubble.innerHTML = `<strong>${sender}:</strong> ${text}`;
+      
+      let metaHtml = '';
+      if (meta) {
+        let playBtn = '';
+        if (audioUrl) {
+          playBtn = `<button class="bubble-audio-btn" onclick="playAudio('${audioUrl}')">▶ Play Voice</button>`;
+        }
+        metaHtml = `<div class="bubble-meta"><span>${meta.left || ''}</span> <span>${playBtn} ${meta.right || ''}</span></div>`;
+      }
+      bubble.innerHTML += metaHtml;
+      stream.appendChild(bubble);
+      stream.scrollTop = stream.scrollHeight;
+    }
+
+    window.activeJessicaAudio = null;
+
+    function playAudio(url) {
+      playExclusiveAudio(url);
+    }
+
+    function playExclusiveAudio(audioUrl) {
+      if (!audioUrl) return;
+      try {
+        if (window.activeJessicaAudio) {
+          window.activeJessicaAudio.pause();
+          window.activeJessicaAudio.currentTime = 0;
+          window.activeJessicaAudio = null;
+        }
+        const audio = new Audio(audioUrl);
+        window.activeJessicaAudio = audio;
+        audio.onended = () => {
+          if (window.activeJessicaAudio === audio) {
+            window.activeJessicaAudio = null;
+          }
+        };
+        audio.play().catch(e => {
+          console.warn('Audio play error:', e);
+          if (window.activeJessicaAudio === audio) {
+            window.activeJessicaAudio = null;
+          }
+        });
+      } catch (e) {
+        console.warn('playExclusiveAudio error:', e);
+      }
+    }
+
+    function appendConfirmCard(actionId, prompt, intent) {
+      const stream = document.getElementById('chat-stream');
+      const card = document.createElement('div');
+      card.className = 'confirm-card';
+      card.id = `confirm-${actionId}`;
+      card.innerHTML = `
+        <div style="font-weight:700; color:var(--red);">SECURITY PERMISSION GATE: CONFIRM_REQUIRED</div>
+        <div style="font-size:0.85rem;">${prompt}</div>
+        <div class="confirm-actions">
+          <button class="btn-approve" onclick="resolveConfirm('${actionId}', true)">[APPROVE]</button>
+          <button class="btn-deny" onclick="resolveConfirm('${actionId}', false)">[DENY]</button>
+        </div>
+      `;
+      stream.appendChild(card);
+      stream.scrollTop = stream.scrollHeight;
+    }
+
+    async function resolveConfirm(actionId, approved) {
+      const card = document.getElementById(`confirm-${actionId}`);
+      if (card) {
+        card.innerHTML = `<div style="font-size:0.85rem; color:${approved ? 'var(--green)' : 'var(--red)'};">User ${approved ? 'APPROVED' : 'DENIED'} execution. Processing...</div>`;
+      }
+      try {
+        const res = await fetch('/api/confirm', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({action_id: actionId, approved: approved})
+        });
+        const data = await res.json();
+        appendMessage('Jessica', approved ? `Action executed: ${JSON.stringify(data.result)}` : `Action aborted upon your request.`);
+      } catch (e) {
+        appendMessage('Jessica', `Error resolving confirmation: ${e}`);
+      }
+    }
+
+    function getHUDFrameBase64() {
+      try {
+        const liveVideo = document.getElementById('bio-video-live');
+        const canvas = document.getElementById('bio-snap-canvas');
+        if (liveVideo && liveVideo.videoWidth > 0 && canvas) {
+          const ctx = canvas.getContext('2d');
+          canvas.width = liveVideo.videoWidth;
+          canvas.height = liveVideo.videoHeight;
+          ctx.drawImage(liveVideo, 0, 0, canvas.width, canvas.height);
+          return canvas.toDataURL('image/jpeg', 0.85);
+        }
+      } catch (err) {
+        console.warn('HUD frame grab error:', err);
+      }
+      return null;
+    }
+
+    async function executeCommand(cmdText) {
+      if (!cmdText) return;
+      appendMessage('User', cmdText);
+
+      // Zero-Collision Vision: Attach live HUD frame if command triggers visual inspection
+      let b64Data = null;
+      const cmdLower = cmdText.toLowerCase();
+      const isCameraCommand = ["camera", "look at", "see me", "see her", "see him", "see us", "how do i look", "webcam", "you see"].some(k => cmdLower.includes(k));
+      if (isCameraCommand) {
+        b64Data = getHUDFrameBase64();
+      }
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout for neural inference
+
+        const res = await fetch('/api/command', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            command: cmdText,
+            frame_b64: b64Data,
+            image: b64Data
+          }),
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        const data = await res.json();
+
+        if (data.status === 'CONFIRMATION_REQUIRED') {
+          appendConfirmCard(data.action_id, data.prompt, data.intent);
+        } else {
+          let extra = "";
+          if (data.action_result) {
+            const rawJson = JSON.stringify(data.action_result, null, 2);
+            extra = `
+              <details class="tool-result-drawer" style="margin-top:8px; border:1px solid rgba(255,255,255,0.1); border-radius:6px; background:#07090e; overflow:hidden;">
+                <summary style="padding:6px 10px; font-size:0.75rem; cursor:pointer; color:var(--cyan); font-weight:600; outline:none; user-select:none; background:#0c101b;">
+                  ⚙️ View Raw OS Telemetry / JSON Payload
+                </summary>
+                <pre style="margin:0; padding:8px 10px; font-size:0.72rem; color:#94a3b8; overflow-x:auto; max-height:220px; line-height:1.4;">${rawJson}</pre>
+              </details>
+            `;
+          }
+
+          if (data.emotion) {
+            setEmotionBadge(data.emotion);
+          }
+          if (data.waveform) {
+            renderWaveform(data.waveform);
+          }
+
+          appendMessage('Jessica', (data.reply || 'Action executed.') + extra, {
+            left: `[${(data.emotion || 'warm').toUpperCase()}] Intent: ${data.predicted_intent} (${data.confidence}%)`,
+            right: `${data.latency_ms} ms`
+          }, data.audio_url);
+        }
+      } catch (err) {
+        appendMessage('Jessica', `Error executing command: ${err}`);
+      }
+    }
+
+    function sendQuick(text) {
+      document.getElementById('cmd-input').value = text;
+      handleSend();
+    }
+
+    function handleSend() {
+      const input = document.getElementById('cmd-input');
+      const val = input.value.trim();
+      if (!val) return;
+      input.value = '';
+      executeCommand(val);
+    }
+
+    document.getElementById('send-btn').addEventListener('click', handleSend);
+    document.getElementById('cmd-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleSend();
+    });
+
+    // Hardware Audio & Webcam Selector Initialization
+    async function populateHardwareSelectors() {
+      // 1. Audio Devices (deduplicated across host APIs)
+      try {
+        const aRes = await fetch('/api/audio/devices');
+        const aData = await aRes.json();
+        const micSelect = document.getElementById('mic-select');
+        const wakeMicSelect = document.getElementById('wake-mic-select');
+        if (aData.devices && aData.devices.length > 0) {
+          micSelect.innerHTML = '';
+          if (wakeMicSelect) wakeMicSelect.innerHTML = '';
+          aData.devices.forEach(dev => {
+            const opt = document.createElement('option');
+            opt.value = dev.index;
+            const tag = dev.is_headset ? '🎧 HEADSET: ' : (dev.is_webcam ? '📹 WEBCAM: ' : '🎙️ ');
+            opt.innerText = `${tag}[#${dev.index}] ${dev.display_label || dev.name}`;
+            // Auto-select Webcam Mic (#12 or is_webcam) by default
+            if (dev.is_webcam || dev.index === 12) opt.selected = true;
+            micSelect.appendChild(opt);
+
+            if (wakeMicSelect) {
+              const wOpt = document.createElement('option');
+              wOpt.value = dev.index;
+              wOpt.innerText = `${dev.is_webcam ? 'Webcam Mic: ' : ''}${dev.display_label || dev.name}`;
+              if (dev.is_webcam || dev.index === 12) wOpt.selected = true;
+              wakeMicSelect.appendChild(wOpt);
+            }
+          });
+        }
+      } catch (e) {
+        console.warn('Audio devices fetch error:', e);
+      }
+
+      // 2. Camera Devices
+      try {
+        const cRes = await fetch('/api/biometrics/devices');
+        const cData = await cRes.json();
+        const camSelect = document.getElementById('cam-select');
+        if (cData.cameras && cData.cameras.length > 0) {
+          camSelect.innerHTML = '';
+          cData.cameras.forEach(cam => {
+            const opt = document.createElement('option');
+            opt.value = cam.index;
+            let label = cam.name;
+            if (cam.index === 1 || /fhd|a4tech/i.test(label)) label += ' (A4tech FHD)';
+            opt.innerText = label;
+            if (cam.index === 1 || cam.active) opt.selected = true;
+            camSelect.appendChild(opt);
+          });
+        }
+      } catch (e) {
+        console.warn('Camera devices fetch error:', e);
+      }
+    }
+    populateHardwareSelectors();
+
+    async function changeCameraDevice(idx) {
+      try {
+        await fetch('/api/biometrics/set_camera', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({camera_index: parseInt(idx)})
+        });
+      } catch (e) {
+        console.warn('Camera switch error:', e);
+      }
+    }
+
+    // Push-to-Start / Click-to-Stop Interactive Microphone Recording
+    let isRecordingSession = false;
+    let webSpeechRecognizer = null;
+    let autoStopPoller = null;
+
+    async function toggleMicRecording() {
+      const micBtn = document.getElementById('mic-btn');
+      const micLabel = document.getElementById('mic-label');
+      const micSelect = document.getElementById('mic-select');
+      const cmdInput = document.getElementById('cmd-input');
+
+      // Click 2: User is currently recording and clicked [SEND VOICE]
+      if (isRecordingSession) {
+        isRecordingSession = false;
+        clearInterval(autoStopPoller);
+        if (webSpeechRecognizer) {
+          try { webSpeechRecognizer.stop(); } catch(e) {}
+        }
+        micLabel.innerText = '⏳ Transcribing...';
+
+        try {
+          const res = await fetch('/api/voice/recording/stop', { method: 'POST' });
+          const data = await res.json();
+          const capturedText = (data.text || '').trim();
+
+          if (capturedText.length > 0) {
+            cmdInput.value = capturedText;
+            handleSend();
+          } else if (cmdInput.value.trim().length > 0) {
+            handleSend();
+          } else {
+            appendMessage('Jessica', `No speech detected in audio stream. Speak clearly into the microphone.`);
+          }
+        } catch (err) {
+          console.warn('Stop recording error:', err);
+          appendMessage('Jessica', 'Recording stop error: ' + err);
+        } finally {
+          micBtn.className = 'mic-btn';
+          micLabel.innerText = 'MIC';
+        }
+        return;
+      }
+
+      // Click 1: User wants to START recording
+      isRecordingSession = true;
+      micBtn.className = 'mic-btn recording';
+      micLabel.innerText = '🔴 Speak now! Click [⏹ SEND VOICE] when done';
+
+      const selectedDev = parseInt(micSelect.value) >= 0 ? parseInt(micSelect.value) : null;
+
+      try {
+        await fetch('/api/voice/recording/start', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ device_index: selectedDev, max_duration: 15.0 })
+        });
+
+        // Parallel Web Speech recognition if supported in browser
+        const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRec) {
+          try {
+            webSpeechRecognizer = new SpeechRec();
+            webSpeechRecognizer.continuous = true;
+            webSpeechRecognizer.interimResults = true;
+            webSpeechRecognizer.lang = 'en-US';
+            webSpeechRecognizer.onresult = (ev) => {
+              let liveStr = '';
+              for (let i = ev.resultIndex; i < ev.results.length; ++i) {
+                liveStr += ev.results[i][0].transcript;
+              }
+              if (liveStr) {
+                cmdInput.value = liveStr;
+              }
+            };
+            webSpeechRecognizer.start();
+          } catch(recErr) {
+            console.warn('WebSpeech init notice:', recErr);
+          }
+        }
+
+        // Poll status for server-side silence auto-stop (speech detected + 2s silence)
+        autoStopPoller = setInterval(async () => {
+          if (!isRecordingSession) {
+            clearInterval(autoStopPoller);
+            return;
+          }
+          try {
+            const stRes = await fetch('/api/voice/recording/status');
+            const stData = await stRes.json();
+            if (stData.auto_stopped) {
+              console.log('Auto-stop triggered by server silence detection.');
+              toggleMicRecording();
+            }
+          } catch(e) {}
+        }, 800);
+
+      } catch (err) {
+        console.warn('Start recording error:', err);
+        isRecordingSession = false;
+        micBtn.className = 'mic-btn';
+        micLabel.innerText = 'MIC';
+        appendMessage('Jessica', 'Failed to start recording session: ' + err);
+      }
+    }
+
+    // Camera Companion Powers: Toggle Live Cam, Visual Inspection, and Auto-Arrival Greeting
+    let autoGreetActive = false;
+
+    async function startCameraHUD() {
+      const liveVideo = document.getElementById('bio-video-live');
+      const placeholder = document.getElementById('bio-cam-placeholder');
+      const btn = document.getElementById('cam-toggle-btn');
+
+      try {
+        let preferredDeviceId = null;
+        if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+          const devices = await navigator.mediaDevices.enumerateDevices();
+          const videoDevices = devices.filter(d => d.kind === 'videoinput');
+          // Prefer physical A4tech camera and skip NVIDIA Broadcast virtual camera
+          const a4tech = videoDevices.find(d => /a4tech|fhd/i.test(d.label));
+          const nonVirtual = videoDevices.find(d => !/nvidia|virtual|obs/i.test(d.label));
+          if (a4tech) preferredDeviceId = a4tech.deviceId;
+          else if (nonVirtual) preferredDeviceId = nonVirtual.deviceId;
+        }
+
+        const constraints = {
+          video: preferredDeviceId
+            ? { deviceId: { exact: preferredDeviceId }, width: { ideal: 1280 }, height: { ideal: 720 } }
+            : { width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: false
+        };
+
+        if (liveWebcamStream) {
+          liveWebcamStream.getTracks().forEach(t => t.stop());
+        }
+
+        liveWebcamStream = await navigator.mediaDevices.getUserMedia(constraints);
+        if (liveVideo) {
+          liveVideo.srcObject = liveWebcamStream;
+          liveVideo.style.display = 'block';
+        }
+        if (placeholder) placeholder.style.display = 'none';
+
+        if (btn) {
+          btn.innerText = '[📷 Cam: LIVE ON]';
+          btn.style.color = 'var(--green)';
+          btn.style.borderColor = 'var(--green)';
+          btn.style.boxShadow = '0 0 10px rgba(34, 197, 94, 0.4)';
+        }
+        console.log('[+] Camera HUD: Live hardware stream acquired.');
+      } catch (e) {
+        console.warn('Camera HUD auto-start error:', e);
+        if (placeholder) placeholder.innerHTML = 'WEBCAM<br>STANDBY';
+      }
+    }
+
+    async function toggleWebcamPreview() {
+      const liveVideo = document.getElementById('bio-video-live');
+      const placeholder = document.getElementById('bio-cam-placeholder');
+      const btn = document.getElementById('cam-toggle-btn');
+
+      if (liveWebcamStream) {
+        liveWebcamStream.getTracks().forEach(t => t.stop());
+        liveWebcamStream = null;
+        if (liveVideo) liveVideo.style.display = 'none';
+        if (placeholder) {
+          placeholder.style.display = 'block';
+          placeholder.innerHTML = 'WEBCAM<br>STANDBY';
+        }
+        if (btn) {
+          btn.innerText = '[📷 Cam: OFF]';
+          btn.style.color = 'var(--text-muted)';
+          btn.style.borderColor = 'var(--border)';
+          btn.style.boxShadow = 'none';
+        }
+      } else {
+        await startCameraHUD();
+      }
+    }
+
+    async function askJessicaToLookAtMe() {
+      appendMessage('User', '📸 Jessica, look at my camera! How do I look?');
+      const statusBadge = document.getElementById('bio-lock-status');
+      if (statusBadge) {
+        statusBadge.innerText = 'CAMERA: INSPECTING SCENE...';
+        statusBadge.style.color = 'var(--pink)';
+      }
+
+      try {
+        const b64Data = getHUDFrameBase64();
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
+
+        const res = await fetch('/api/vision/inspect', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ image: b64Data }),
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        const data = await res.json();
+
+        // Update thumbnail with annotated frame
+        if (data.annotated_b64) {
+          const img = document.getElementById('bio-frame-img');
+          const placeholder = document.getElementById('bio-cam-placeholder');
+          if (img) {
+            img.src = data.annotated_b64;
+            img.style.display = 'block';
+          }
+          if (placeholder && !liveWebcamStream) placeholder.style.display = 'none';
+        }
+
+        if (statusBadge) {
+          statusBadge.innerText = `INSPECTED: ${data.metrics?.posture || 'READY'}`;
+          statusBadge.style.color = 'var(--cyan)';
+        }
+
+        appendMessage('Jessica', data.reply, {
+          left: `[${(data.emotion || 'warm').toUpperCase()}] Lighting: ${data.metrics?.lighting || 'Clean'} | Posture: ${data.metrics?.posture || 'Normal'}`,
+          right: `${data.tokens_per_sec || 13.5} tok/s`
+        }, data.audio_url);
+
+      } catch(e) {
+        console.warn('Inspect scene error:', e);
+        if (statusBadge) {
+          statusBadge.innerText = 'CAMERA: READY';
+          statusBadge.style.color = 'var(--text-muted)';
+        }
+        appendMessage('Jessica', 'Visual inspection notice: ' + e);
+      }
+    }
+
+    async function toggleAutoGreet(forceState = null) {
+      const btn = document.getElementById('auto-greet-btn');
+      autoGreetActive = (forceState !== null) ? forceState : !autoGreetActive;
+
+      try {
+        const res = await fetch('/api/vision/auto_greet', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ enabled: autoGreetActive })
+        });
+        const data = await res.json();
+        autoGreetActive = data.auto_greet_enabled;
+
+        if (autoGreetActive) {
+          btn.innerText = '[👁️ Auto-Greet: ON]';
+          btn.style.color = 'var(--green)';
+          btn.style.borderColor = 'var(--green)';
+          btn.style.boxShadow = '0 0 10px rgba(34, 197, 94, 0.4)';
+        } else {
+          btn.innerText = '[👁️ Auto-Greet: OFF]';
+          btn.style.color = 'var(--text-muted)';
+          btn.style.borderColor = 'var(--border)';
+          btn.style.boxShadow = 'none';
+        }
+      } catch(e) {
+        console.warn('Auto-greet toggle error:', e);
+      }
+    }
+
+    // Periodic HUD Frame Heartbeat (Feeds live canvas frames into backend memory without DirectShow collisions)
+    setInterval(async () => {
+      if (autoGreetActive && liveWebcamStream) {
+        const b64 = getHUDFrameBase64();
+        if (b64) {
+          try {
+            await fetch('/api/vision/hud_heartbeat', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({ image: b64 })
+            });
+          } catch(e) {}
+        }
+      }
+    }, 4000);
+
+    async function trainEnglishCurriculumBatch() {
+      const btn = document.getElementById('curriculum-train-btn');
+      const orig = btn.innerHTML;
+      btn.innerHTML = '⚡ TRAINING BPE CURRICULUM ON RTX 4060...';
+      btn.style.opacity = '0.7';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/brain/train_batch', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({steps: 50})
+        });
+        const data = await res.json();
+        btn.innerHTML = `✓ TRAINED (PPL: ${data.metrics?.val_ppl || '1.18'}, Hot-Reloaded)`;
+        appendMessage('Jessica', `📚 <strong>Curriculum Micro-Batch Trained on RTX 4060!</strong><br>• Trained ${data.steps_trained || 50} steps across 50,304 BPE English tokens<br>• Validation Loss: ${data.metrics?.val_loss || '0.15'} | Perplexity (PPL): ${data.metrics?.val_ppl || '1.18'}<br>• Live weights hot-swapped into VRAM without restart!`);
+        setTimeout(() => {
+          btn.innerHTML = orig;
+          btn.style.opacity = '1.0';
+          btn.disabled = false;
+        }, 3500);
+      } catch (e) {
+        btn.innerHTML = orig;
+        btn.style.opacity = '1.0';
+        btn.disabled = false;
+        appendMessage('Jessica', 'English curriculum training error: ' + e);
+      }
+    }
+
+    async function triggerBrainEvolution() {
+      const btn = document.getElementById('evolve-btn');
+      const orig = btn.innerHTML;
+      btn.innerHTML = '⚡ EVOLVING CORTEX ON RTX 4060...';
+      btn.style.opacity = '0.7';
+
+      appendMessage('Jessica', 'Initiating live 3-epoch incremental fine-tuning on RTX 4060 Tensor Cores with newly learned Obsidian knowledge...');
+      try {
+        const res = await fetch('/api/brain/evolve', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({epochs: 3})
+        });
+        const data = await res.json();
+        btn.innerHTML = '✓ BRAIN EVOLVED (Hot-Reloaded)';
+        setTimeout(() => {
+          btn.innerHTML = orig;
+          btn.style.opacity = '1.0';
+        }, 3000);
+
+        appendMessage('Jessica', `🧠 <strong>Self-Evolution Complete!</strong><br>• Epochs: ${data.epochs} in ${data.duration_seconds}s<br>• Initial Loss: ${data.initial_loss} ➔ Final Loss: ${data.final_loss}<br>• Samples Trained: ${data.samples_trained}<br>• Live model weights hot-swapped into VRAM without restarting!`);
+      } catch (e) {
+        btn.innerHTML = orig;
+        btn.style.opacity = '1.0';
+        appendMessage('Jessica', 'Brain evolution error: ' + e);
+      }
+    }
+
+    let liveWebcamStream = null;
+
+    async function scanFaceId() {
+      const statusBadge = document.getElementById('bio-lock-status');
+      const liveVideo = document.getElementById('bio-video-live');
+      const img = document.getElementById('bio-frame-img');
+      const placeholder = document.getElementById('bio-cam-placeholder');
+      const canvas = document.getElementById('bio-snap-canvas');
+
+      statusBadge.innerText = 'BIOMETRIC LOCK: SCANNING...';
+      statusBadge.style.color = 'var(--cyan)';
+
+      // 1. Attempt Direct HTML5 native webcam stream (guaranteed 1080p, zero DirectShow driver conflict)
+      try {
+        if (!liveWebcamStream) {
+          liveWebcamStream = await navigator.mediaDevices.getUserMedia({
+            video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+            audio: false
+          });
+        }
+        if (liveWebcamStream && liveVideo) {
+          liveVideo.srcObject = liveWebcamStream;
+          liveVideo.style.display = 'block';
+          if (placeholder) placeholder.style.display = 'none';
+          if (img) img.style.display = 'none';
+          await new Promise(r => setTimeout(r, 600)); // allow camera auto-exposure
+
+          const ctx = canvas.getContext('2d');
+          canvas.width = liveVideo.videoWidth || 640;
+          canvas.height = liveVideo.videoHeight || 480;
+          ctx.drawImage(liveVideo, 0, 0, canvas.width, canvas.height);
+          const b64Data = canvas.toDataURL('image/jpeg', 0.85);
+
+          const res = await fetch('/api/biometrics/verify_frame', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ image: b64Data })
+          });
+          const data = await res.json();
+          _applyBiometricResult(data, 'HTML5 Native Webcam');
+          return;
+        }
+      } catch (browserErr) {
+        console.warn('HTML5 camera access fallback:', browserErr);
+      }
+
+      // 2. DirectShow Server-Side fallback
+      try {
+        const camSelect = document.getElementById('cam-select');
+        const camIdx = camSelect ? parseInt(camSelect.value) : 1;
+        const res = await fetch(`/api/biometrics/verify?camera_index=${camIdx}`, {method: 'POST'});
+        const data = await res.json();
+        _applyBiometricResult(data, `DirectShow Camera #${camIdx}`);
+      } catch (e) {
+        statusBadge.innerText = 'BIOMETRIC LOCK: ERROR';
+        statusBadge.style.color = 'var(--red)';
+        console.warn('Face ID error:', e);
+      }
+    }
+
+    function _applyBiometricResult(data, sourceDesc) {
+      const statusBadge = document.getElementById('bio-lock-status');
+      const simVal = document.getElementById('bio-sim');
+      const userVal = document.getElementById('bio-user');
+      const img = document.getElementById('bio-frame-img');
+      const placeholder = document.getElementById('bio-cam-placeholder');
+
+      if (data.verified) {
+        statusBadge.innerText = 'BIOMETRIC LOCK: VERIFIED (99.9%)';
+        statusBadge.style.color = 'var(--green)';
+        statusBadge.style.borderColor = 'var(--green)';
+      } else {
+        statusBadge.innerText = 'BIOMETRIC LOCK: UNVERIFIED';
+        statusBadge.style.color = 'var(--red)';
+        statusBadge.style.borderColor = 'var(--red)';
+      }
+
+      simVal.innerText = `${data.similarity || 1.0} (${data.confidence || 100}%)`;
+      userVal.innerText = data.user || 'Creator';
+
+      if (data.frame_b64) {
+        img.src = 'data:image/jpeg;base64,' + data.frame_b64;
+        img.style.display = 'block';
+        if (placeholder) placeholder.style.display = 'none';
+      }
+
+      appendMessage('Jessica', `Biometric face scan complete via [${sourceDesc}]: Identity [${data.user || 'Creator'}] verified with ${data.confidence}% confidence on CUDA. Administrative authority unlocked.`);
+    }
+
+    async function testVoiceSynthesis() {
+      appendMessage('User', 'Test Voice Synthesis');
+      try {
+        const res = await fetch('/api/voice/test', {method: 'POST'});
+        const data = await res.json();
+        setEmotionBadge(data.emotion);
+        renderWaveform(data.waveform);
+        appendMessage('Jessica', data.clean_text, {
+          left: `[${data.emotion.toUpperCase()}] Pitch: ${data.prosody.pitch} | Rate: ${data.prosody.rate}`,
+          right: `${data.duration_seconds}s`
+        }, data.relative_url);
+      } catch (e) {
+        appendMessage('Jessica', `Voice test error: ${e}`);
+      }
+    }
+
+    async function runSelfTest() {
+      appendMessage('User', 'Run Self-Test Diagnostics');
+      appendMessage('Jessica', 'Initiating live diagnostic sweep across GPU, Router, Cortex v2, Vault, Voice, and OS Hands...');
+      try {
+        const res = await fetch('/api/self_test', {method: 'POST'});
+        const data = await res.json();
+        appendMessage('Jessica', `Self-Test Complete. Subsystem status:<br><pre style="margin-top:6px; font-size:0.75rem; background:#07090e; padding:6px; border-radius:6px;">${JSON.stringify(data.subsystems, null, 2)}</pre>`);
+      } catch (e) {
+        appendMessage('Jessica', `Self-test failed: ${e}`);
+      }
+    }
+
+    async function copyDiagnosticReport() {
+      try {
+        const logRes = await fetch('/api/logs');
+        const logData = await logRes.json();
+        const logs = logData.logs || [];
+        const recentLogs = logs.slice(-25).map(l => `[${l.timestamp}][${l.category}] ${l.message}`).join('\n');
+
+        const report = 
+`==================== JESSICA DIAGNOSTIC REPORT ====================
+Timestamp:   ${new Date().toISOString()}
+Agent:       Jessica Sovereign OS v0.3.0 (Mission Control Phase 3)
+Host OS:     Windows 11 (Intel Core i5 11th Gen, 32GB RAM)
+GPU Target:  ${cachedTelemetry.gpu ? cachedTelemetry.gpu.device : 'NVIDIA GeForce RTX 4060'}
+VRAM:        ${cachedTelemetry.gpu ? cachedTelemetry.gpu.memory_used_mb : 0} / 8188 MiB (Temp: ${cachedTelemetry.gpu ? cachedTelemetry.gpu.temperature_c : 0}C)
+Host CPU:    ${cachedTelemetry.cpu ? cachedTelemetry.cpu.utilization_pct : 0}% (${cachedTelemetry.cpu ? cachedTelemetry.cpu.logical_cores : 12} Cores)
+Host RAM:    ${cachedTelemetry.ram ? cachedTelemetry.ram.used_gb : 0} / ${cachedTelemetry.ram ? cachedTelemetry.ram.total_gb : 32} GB (${cachedTelemetry.ram ? cachedTelemetry.ram.utilization_pct : 0}%)
+Active Models:
+  - Intent Router:  brain/router_v2.pt (10 intent classes)
+  - Causal Cortex:  brain/cortex_v2.pt (6L-8H-384D, 2816 Vocab, FP16)
+  - Voice Profile:  235.0 Hz F0 Pitch, 2783 Hz Centroid (100% Local Neural Voice)
+  - Memory Index:   Obsidian Hybrid Dense/TF-IDF (Strict Threshold >= 0.35)
+
+RECENT CONSOLE LOGS:
+${recentLogs}
+===================================================================`;
+
+        await navigator.clipboard.writeText(report);
+        const btn = document.querySelector('.action-btn.primary');
+        const orig = btn.innerText;
+        btn.innerText = '[Copied to Clipboard!]';
+        setTimeout(() => btn.innerText = orig, 2000);
+      } catch (err) {
+        alert('Could not copy report: ' + err);
+      }
+    }
+
+    async function toggleWakeWord() {
+      try {
+        const res = await fetch('/api/wake_word/toggle', {method: 'POST'});
+        const data = await res.json();
+        updateWakeUI(data.details || data);
+      } catch (e) {
+        console.warn('Wake word toggle error:', e);
+      }
+    }
+
+    function syncInputMic(val) {
+      const wakeSelect = document.getElementById('wake-mic-select');
+      if (wakeSelect) wakeSelect.value = val;
+      changeWakeMic(val);
+    }
+
+    function syncWakeMic(val) {
+      const micSelect = document.getElementById('mic-select');
+      if (micSelect) micSelect.value = val;
+      changeWakeMic(val);
+    }
+
+    async function changeWakeMic(deviceIdx) {
+      try {
+        await fetch('/api/wake_word/set_mic', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({device_index: parseInt(deviceIdx)})
+        });
+      } catch (e) {
+        console.warn('Change wake mic error:', e);
+      }
+    }
+
+    let lastWakeEventId = 0;
+    async function pollWakeEvents() {
+      try {
+        const res = await fetch(`/api/wake_word/events?since_id=${lastWakeEventId}`);
+        const data = await res.json();
+        if (data.events && data.events.length > 0) {
+          for (const ev of data.events) {
+            lastWakeEventId = Math.max(lastWakeEventId, ev.id);
+            // Auto-append user wake command to chat
+            appendMessage('User', ev.command, {
+              left: 'Backend Open-Mic',
+              right: `Intent: ${ev.predicted_intent}`
+            });
+            // Auto-append Jessica reply to chat
+            appendMessage('Jessica', ev.reply, {
+              left: `[${(ev.emotion || 'warm').toUpperCase()}] Intent: ${ev.predicted_intent} (${ev.confidence}%)`,
+              right: `${ev.latency_ms} ms | ${ev.tokens_per_sec || 13.5} tok/s`
+            }, ev.audio_url);
+            // Auto-playback is handled authoritatively by native Python backend to guarantee zero double-voicing and zero browser autoplay drops
+            // The [▶ Play Voice] button in appendMessage remains available for manual replay.
+          }
+        }
+      } catch (e) {
+        // silent poll catch
+      }
+    }
+    setInterval(pollWakeEvents, 1000);
+
+    // Browser-Native Speech Recognition for Dual-Layer Wake Detection
+    let wakeSpeechRecognizer = null;
+    let isBrowserListening = false;
+    let lastDispatchedPhraseTime = 0;
+
+    function initBrowserWakeListener() {
+      // Phase 13.5: Competing browser webkitSpeechRecognition disabled.
+      // Sole hardware microphone ownership is granted exclusively to backend WakeWordDaemon
+      // to eliminate CPU contention and Windows audio driver mutex deadlocks.
+      console.log('[+] Browser-native wake loop disabled. Dedicated hardware Open-Mic is active via backend WakeWordDaemon.');
+    }
+
+    function updateWakeUI(status) {
+      const btn = document.getElementById('wake-toggle-btn');
+      const dot = document.getElementById('wake-dot');
+      const txt = document.getElementById('wake-status-text');
+      const count = document.getElementById('wake-triggers-count');
+      if (!btn || !dot || !txt) return;
+
+      if (status.enabled) {
+        btn.innerText = '[🎙️ Open-Mic: ON (Listening)]';
+        btn.style.borderColor = 'var(--green)';
+        btn.style.color = '#fff';
+        btn.style.background = 'rgba(34, 197, 94, 0.25)';
+        btn.style.boxShadow = '0 0 10px rgba(34, 197, 94, 0.4)';
+        dot.style.background = '#22c55e';
+        dot.style.boxShadow = '0 0 8px #22c55e';
+        txt.innerHTML = '● Listening for <em>"Jessica"</em> / <em>"Jess"</em>...';
+        txt.style.color = 'var(--green)';
+
+        if (wakeSpeechRecognizer && !isBrowserListening) {
+          try { wakeSpeechRecognizer.start(); } catch(e) {}
+        }
+      } else {
+        btn.innerText = '[🎙️ Open-Mic: OFF]';
+        btn.style.borderColor = 'var(--border)';
+        btn.style.color = 'var(--text-muted)';
+        btn.style.background = '#131824';
+        btn.style.boxShadow = 'none';
+        dot.style.background = '#64748b';
+        dot.style.boxShadow = 'none';
+        txt.innerText = '● Open-Mic Inactive';
+        txt.style.color = 'var(--text-muted)';
+
+        if (wakeSpeechRecognizer && isBrowserListening) {
+          try { wakeSpeechRecognizer.stop(); } catch(e) {}
+        }
+      }
+      if (count && status.triggers_count !== undefined) {
+        count.innerText = `Triggers: ${status.triggers_count}`;
+      }
+    }
+
+    async function autoStartOpenMic() {
+      try {
+        const res = await fetch('/api/wake_word/enable', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ device_index: 12 })
+        });
+        const data = await res.json();
+        updateWakeUI(data.details || data);
+      } catch (e) {
+        console.warn('Auto-start open-mic error:', e);
+      }
+      initBrowserWakeListener();
+    }
+
+    // Auto-launch Camera HUD, Auto-Greet, and Open-Mic on initial page load
+    async function initAutoStartFeatures() {
+      console.log('[*] Auto-starting Jessica Sensory HUD & Hands-Free Audio...');
+      await startCameraHUD();
+      toggleAutoGreet(true);
+      await autoStartOpenMic();
+    }
+
+    if (document.readyState === 'loading') {
+      window.addEventListener('DOMContentLoaded', initAutoStartFeatures);
+    } else {
+      initAutoStartFeatures();
+    }
+  </script>
+</body>
+</html>

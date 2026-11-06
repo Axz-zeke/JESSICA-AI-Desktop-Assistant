@@ -1,0 +1,70 @@
+{
+  "source_file": "jessica-voice.mp3",
+  "golden_reference_wav": "jessica_golden_10s.wav",
+  "reference_wav": "jessica_golden_10s.wav",
+  "vocal_timbre_lock": true,
+  "duration_seconds": 10.0,
+  "sample_rate_hz": 24000,
+  "pitch_f0": {
+    "mean_hz": 235.0,
+    "std_hz": 61.52,
+    "min_hz": 130.81,
+    "max_hz": 452.89,
+    "voice_range": "Soprano / Bright Alto"
+  },
+  "timbre_acoustics": {
+    "spectral_centroid_mean_hz": 2783.27,
+    "spectral_centroid_std_hz": 1794.72,
+    "spectral_bandwidth_mean_hz": 2456.25,
+    "warmth_profile": "Warm, Playful, Bright Human Voice (Locked)",
+    "rms_energy_mean": 0.0493
+  },
+  "prosody_cadence": {
+    "estimated_tempo_bpm": 100.4,
+    "speaking_rate_wpm": 165
+  },
+  "emotion_acoustic_mappings": {
+    "warm": {
+      "pitch_shift_semitones": 0.0,
+      "pitch": "+0Hz",
+      "rate": "+0%",
+      "volume": "+0%",
+      "pause_ms": 180
+    },
+    "playful": {
+      "pitch_shift_semitones": 0.0,
+      "pitch": "+0Hz",
+      "rate": "+2%",
+      "volume": "+1%",
+      "pause_ms": 150
+    },
+    "excited": {
+      "pitch_shift_semitones": 0.0,
+      "pitch": "+0Hz",
+      "rate": "+3%",
+      "volume": "+2%",
+      "pause_ms": 120
+    },
+    "calm": {
+      "pitch_shift_semitones": 0.0,
+      "pitch": "+0Hz",
+      "rate": "-2%",
+      "volume": "-1%",
+      "pause_ms": 250
+    },
+    "serious": {
+      "pitch_shift_semitones": 0.0,
+      "pitch": "+0Hz",
+      "rate": "-1%",
+      "volume": "+1%",
+      "pause_ms": 220
+    },
+    "curious": {
+      "pitch_shift_semitones": 0.0,
+      "pitch": "+0Hz",
+      "rate": "+1%",
+      "volume": "+0%",
+      "pause_ms": 160
+    }
+  }
+}

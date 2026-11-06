@@ -1,0 +1,68 @@
+<USER_REQUEST>
+# ROLE: Principal Deep Learning Researcher & LLM Pre-Training Architect (Karpathy `nanoGPT` / `llm.c` style)
+We are freezing all peripheral OS feature additions to focus **100% on Jessica's Neural Brain, Parameter Scaling, Full English Vocabulary, and Conversational Fluency**.
+
+First, fix a critical bug from the live GUI screenshot:
+- **Fix `TypeError: Failed to fetch` Crash:** In the screenshot, Panel 2 was polling `/api/biometrics/verify` every 2 seconds on the main thread, and clicking `STT...` or sending a chat caused `jessica_server.py` to block/crash (`TypeError: Failed to fetch`).
+  1. Stop the frontend from auto-polling `/api/biometrics/verify` in a loop (only scan face when the user clicks `[Scan / Enroll Face]`).
+  2. Run all heavy PyTorch inference, audio recording, and TTS calls inside `asyncio.to_thread(...)` / threadpool workers with global `try/except` handlers in `jessica_server.py` so the FastAPI server NEVER crashes or drops a connection!
+
+Now execute **THE JESSICA ENGLISH MASTERY & BRAIN SCALING PLAN**:
+
+---
+
+### STEP 1: Upgrade to Full English Vocabulary & Scaled Transformer (`brain/cortex_net.py`)
+1. **Full English BPE Tokenizer (`brain/bpe_tokenizer.py`):**
+   - Install `tiktoken` and `datasets` in `venv` (`pip install tiktoken datasets`).
+   - Expand Jessica's vocabulary so she has complete coverage of the English language (either via a clean 16,000–32,000 subword BPE tokenizer trained/loaded on real English corpora + special tokens `<|bos|>`, `<|user|>`, `<|context|>`, `<|jessica|>`, `<|emotion:warm|>`, `<|eos|>`).
+2. **Scale Up `brain/cortex_net.py` (`JessicaCortexLM` - Modern Llama/GPT Architecture):**
+   - Upgrade the architecture on our RTX 4060 (we have >6 GB free VRAM!):
+     - **Architecture:** `n_layers=8` to `12`, `n_heads=8` to `12`, `d_model=512` to `768`, `d_ff=2048`, `max_seq_len=256`, Pre-RMSNorm / LayerNorm, GELU/SwiGLU, Weight Tying between token embedding and LM head (`model.lm_head.weight = model.tok_emb.weight`), and Flash Attention (`F.scaled_dot_product_attention(..., is_causal=True)`—which uses RTX 4060 Ada Lovelace Tensor Cores at maximum speed!).
+   - This gives Jessica **30M to 65M+ real parameters** while running FP16 training at blazing speed via `torch.nn.functional.scaled_dot_product_attention`.
+
+---
+
+### STEP 2: Build the 3-Stage English Curriculum Dataset Pipeline (`datasets/build_english_curriculum.py`)
+Instead of tiny synthetic lists, build a comprehensive **Multi-Stage English & Conversational Curriculum** (`datasets/english_mastery_corpus.jsonl`, **15,000+ to 30,000+ high-quality English dialogue & Q&A pairs** combining downloaded open-source human dialogue datasets via `datasets` / curated local generation):
+- **Stage 1: Basic to Fluent Everyday English Conversation (50% of corpus):**
+  - Thousands of natural human-to-human multi-turn and single-turn conversations: greetings, how are you, daily life, feelings, opinions, humor, empathy, asking follow-up questions, explaining simple concepts, and casual chatting in natural, modern English.
+- **Stage 2: General World Knowledge, Logic & Clear Explanations (30% of corpus):**
+  - Clear, fluent English Q&A covering science, technology, computers, history, everyday problem solving, definitions, and "how things work".
+- **Stage 3: Jessica Identity, Emotional Prosody & Companion Dialogue (20% of corpus):**
+  - Rich, natural conversations where Jessica responds as the user's loyal, intelligent desktop AI companion with natural emotional tags (`<emotion: warm>`, `<emotion: playful>`, `<emotion: curious>`, `<emotion: calm>`) and handles any unseen phrasing gracefully.
+
+---
+
+### STEP 3: Train `cortex_v5_fluent.pt` with Flash Attention, Target-Only Loss Masking & Cosine Schedule (`brain/train_fluent_cortex.py`)
+1. Write a rock-solid PyTorch FP16 Tensor Core trainer (`brain/train_fluent_cortex.py`):
+   - Use `F.scaled_dot_product_attention` (PyTorch 2.5 FlashAttention on RTX 4060).
+   - Strict Target-Only Loss Masking (`ignore_index=-100` on all `<user>` and `<context>` tokens).
+   - `AdamW` optimizer (`weight_decay=0.05`, `betas=(0.9, 0.95)`), gradient clipping (`1.0`), and Cosine Annealing learning rate schedule with warmup.
+   - Train across the full curriculum on the RTX 4060, logging validation perplexity (`PPL`) and loss across Stage 1 (Basic English), Stage 2 (General Knowledge), and Stage 3 (Fluent Persona).
+2. Implement clean **Top-P (`p=0.9`, `temp=0.25`) + Repetition Penalty (`1.15`) + N-gram Block** decoding in `brain/cortex_net.py` so Jessica never repeats words and speaks smooth, natural English sentences even on brand-new prompts she has never seen before!
+
+---
+
+### STEP 4: Add a "Brain Training & Fluency Monitor" to the GUI (`desktop_app/`)
+1. Fix all frontend `fetch()` calls with proper timeouts and make sure `/api/command` and `/api/voice/listen` never throw `TypeError: Failed to fetch`.
+2. In Panel 2 of the Mission Control GUI, display Jessica's **Brain & English Fluency Telemetry**:
+   - Total Parameter Count (e.g., `45.2M Params`), Vocabulary Size, Validation Perplexity / Fluency Score, and a **`[📚 Train Next English Curriculum Batch (GPU)]`** button so the user can trigger continuous English training sessions right from the GUI anytime!
+
+---
+
+# REQUIRED FINAL OUTPUT FORMAT
+Restart `jessica_server.py` detached (`Start-Process`, `access_log=False` — NEVER block the terminal!) and print a single code block titled `=== JESSICA PHASE 6: ENGLISH FLUENCY & SCALED BRAIN REPORT ===` containing:
+1. Verification that the `TypeError: Failed to fetch` server crash/blocking bug is permanently fixed.
+2. Exact architecture specs of the scaled `cortex_v5_fluent.pt` (Parameter count, Layers, Heads, Embedding dim, BPE Vocabulary size, FlashAttention speed in tokens/sec).
+3. Curriculum Dataset stats (Total English dialogue pairs across Stage 1 Basic English, Stage 2 General Knowledge, Stage 3 Companion Persona) and Training Loss / Perplexity reduction.
+4. **The Unseen English Conversation Test:** Test Jessica on **10 casual, unscripted everyday English prompts** (NOT in her training commands—e.g., `"Hey Jessica, I had a long day today"`, `"What do you think about artificial intelligence?"`, `"Can we just chat for a bit?"`, `"Why is the sky blue?"`, `"Tell me something interesting"`, `"I'm building you from scratch, what do you think?"`, `"Good night Jessica"`, etc.) and print her exact word-for-word responses.
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-10-31T23:39:22+08:00.
+
+The user's current state is as follows:
+Active Document: e:\Documents\GitHub\JESSICA\Launch_Jessica.bat (LANGUAGE_UNSPECIFIED)
+Cursor is on line: 21
+Other open documents:
+- e:\Documents\GitHub\JESSICA\brain\vault_indexer.py (LANGUAGE_UNSPECIFIED)
+</ADDITIONAL_METADATA>

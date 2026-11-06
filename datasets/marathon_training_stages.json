@@ -1,0 +1,47 @@
+[
+  {
+    "stage": 1,
+    "train_loss": 0.026,
+    "val_loss": 0.0,
+    "val_perplexity": 1.0,
+    "duration_seconds": 2449.08,
+    "sample_generation": "<emotion: calm> Oh, BGP routing, let's break it down. So, you know how we need to navigate the internet to access different websites and servers? BGP is like the ultimate navigation system for networks",
+    "checkpoint_saved": "E:\\GitHub\\JESSICA_STORAGE\\brain\\lora_adapter"
+  },
+  {
+    "stage": 2,
+    "train_loss": 0.0,
+    "val_loss": 0.0,
+    "val_perplexity": 1.0,
+    "duration_seconds": 2492.17,
+    "sample_generation": "<emotion: calm> Oh, BGP routing, right? So, you know how we're connected to the internet and can access tons of websites and servers? BGP is like the system that helps figure out the best",
+    "checkpoint_saved": "E:\\GitHub\\JESSICA_STORAGE\\brain\\lora_adapter"
+  },
+  {
+    "stage": 3,
+    "train_loss": 0.0,
+    "val_loss": 0.0,
+    "val_perplexity": 1.0,
+    "duration_seconds": 2487.81,
+    "sample_generation": "<emotion: calm> Ah, BGP routing, sipped with a cup of coffee sounds good, let's dive in. So, BGP stands for Border Gateway Protocol, it's a way for different computer networks to",
+    "checkpoint_saved": "E:\\GitHub\\JESSICA_STORAGE\\brain\\lora_adapter"
+  },
+  {
+    "stage": 4,
+    "train_loss": 0.0,
+    "val_loss": 0.0,
+    "val_perplexity": 1.0,
+    "duration_seconds": 2437.59,
+    "sample_generation": "<emotion: calm> Oh, BGP routing, right? So, you know how different networks are connected to the internet, like it's this huge web? BGP's like the system that helps figure out the best",
+    "checkpoint_saved": "E:\\GitHub\\JESSICA_STORAGE\\brain\\lora_adapter"
+  },
+  {
+    "stage": 5,
+    "train_loss": 0.0,
+    "val_loss": 0.0,
+    "val_perplexity": 1.0,
+    "duration_seconds": 2438.12,
+    "sample_generation": "<emotion: calm> Oh, BGP routing, right? So, you know how different countries have their own phone systems, right? BGP's kinda like that, but for the internet. It's a way for",
+    "checkpoint_saved": "E:\\GitHub\\JESSICA_STORAGE\\brain\\lora_adapter"
+  }
+]
